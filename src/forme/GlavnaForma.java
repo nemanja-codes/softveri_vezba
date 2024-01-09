@@ -24,7 +24,9 @@ public class GlavnaForma extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
         kontroler = Controller.getInstance();
-        ModelTabeleKnjige modelTabele = new ModelTabeleKnjige(kontroler.getListaKnjiga());
+        //ModelTabeleKnjige modelTabele = new ModelTabeleKnjige(kontroler.getListaKnjiga());
+        ModelTabeleKnjige modelTabele = new ModelTabeleKnjige(kontroler.ucitajListuKnjigaIzBaze());
+
         jTableKnjige.setModel(modelTabele);
     }
 
@@ -165,10 +167,10 @@ public class GlavnaForma extends javax.swing.JFrame {
         int selektovaniRed = jTableKnjige.getSelectedRow();
         
         if(selektovaniRed == -1) {
-            JOptionPane.showMessageDialog(this, "Morate selektovati knjigu koju zelite obrisati!", "Upozorenje", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Morate selektovati knjigu koju zelite izmeniti!", "Upozorenje", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        Knjiga selektovanaKnjiga = kontroler.getListaKnjiga().get(selektovaniRed);
+        Knjiga selektovanaKnjiga = kontroler.ucitajListuKnjigaIzBaze().get(selektovaniRed);
         FormaKnjiga fk = new FormaKnjiga(this, true, selektovanaKnjiga);
         fk.setVisible(true);
     }//GEN-LAST:event_jButtonIzmeniActionPerformed
@@ -179,8 +181,10 @@ public class GlavnaForma extends javax.swing.JFrame {
         if(selektovaniRed == -1) {
             JOptionPane.showMessageDialog(this, "Morate selektovati knjigu koju zelite obrisati!", "Upozorenje", JOptionPane.WARNING_MESSAGE);
         } else {
+            ModelTabeleKnjige mtk = (ModelTabeleKnjige) jTableKnjige.getModel();
+            int id = mtk.getListaKnjiga().get(selektovaniRed).getId();
             Controller kontroler = Controller.getInstance();
-            kontroler.obrisiKnjigu(selektovaniRed);
+            kontroler.obrisiKnjigu(id);
             
             osveziTabelu();
         }
@@ -242,7 +246,11 @@ public class GlavnaForma extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     void osveziTabelu() {
-        ModelTabeleKnjige modelTabele = (ModelTabeleKnjige) jTableKnjige.getModel();
-        modelTabele.osveziPodatke();
+         ModelTabeleKnjige modelTabele = new ModelTabeleKnjige(kontroler.ucitajListuKnjigaIzBaze());
+
+         jTableKnjige.setModel(modelTabele);
+        
+//        ModelTabeleKnjige modelTabele = (ModelTabeleKnjige) jTableKnjige.getModel();
+//        modelTabele.osveziPodatke();
     }
 }
