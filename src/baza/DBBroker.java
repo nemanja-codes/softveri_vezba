@@ -20,81 +20,78 @@ import model.Zanr;
 public class DBBroker {
 
     public List<Knjiga> ucitajListuKnjigaIzBaze() {
-         List<Knjiga> lista = new ArrayList<>();
+        List<Knjiga> lista = new ArrayList<>();
         try {
-           
+
             String upit = "SELECT * FROM KNJIGA K JOIN AUTOR A ON k.autorId = a.id";
             Statement st = Konekcija.getInstance().getConnection().createStatement();
             ResultSet rs = st.executeQuery(upit);
-            while(rs.next()) {
+            while (rs.next()) {
                 int id = rs.getInt("k.id");
                 String naslov = rs.getString("k.naslov");
                 int godIz = rs.getInt("k.godinaIzdanja");
                 String ISBN = rs.getString("k.ISBN");
                 String zanr = rs.getString("k.zanr");
-                 System.out.println(zanr);
+                System.out.println(zanr);
                 Zanr z = Zanr.valueOf(zanr);
-                  int idA = rs.getInt("a.id");
+                int idA = rs.getInt("a.id");
                 String ime = rs.getString("a.ime");
-                 String prezime = rs.getString("a.prezime");
+                String prezime = rs.getString("a.prezime");
                 String biografija = rs.getString("a.biografija");
-                 int godR = rs.getInt("a.godinaRodjenja");
+                int godR = rs.getInt("a.godinaRodjenja");
                 Autor a = new Autor(idA, ime, prezime, godR, biografija);
-                
-               Knjiga k = new Knjiga(id, naslov, a, ISBN, godIz, z);
-               
-               lista.add(k);
+
+                Knjiga k = new Knjiga(id, naslov, a, ISBN, godIz, z);
+
+                lista.add(k);
             }
-            
-           
+
         } catch (SQLException ex) {
             Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-         return lista;
+
+        return lista;
     }
 
     public List<Autor> ucitajListuAutoraIzBaze() {
         List<Autor> lista = new ArrayList<>();
         try {
-           
+
             String upit = "SELECT * FROM AUTOR a";
             Statement st = Konekcija.getInstance().getConnection().createStatement();
             ResultSet rs = st.executeQuery(upit);
-            while(rs.next()) {
-              
-                  int idA = rs.getInt("a.id");
+            while (rs.next()) {
+
+                int idA = rs.getInt("a.id");
                 String ime = rs.getString("a.ime");
-                 String prezime = rs.getString("a.prezime");
+                String prezime = rs.getString("a.prezime");
                 String biografija = rs.getString("a.biografija");
-                 int godR = rs.getInt("a.godinaRodjenja");
+                int godR = rs.getInt("a.godinaRodjenja");
                 Autor a = new Autor(idA, ime, prezime, godR, biografija);
-                
-               
-               lista.add(a);
+
+                lista.add(a);
             }
-            
-           
+
         } catch (SQLException ex) {
             Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-         return lista;
+
+        return lista;
     }
 
     public void obrisiKnjigu(int id) {
         try {
             String upit = "DELETE FROM KNJIGA WHERE id = ?";
-            
+
             PreparedStatement ps = Konekcija.getInstance().getConnection().prepareStatement(upit);
             ps.setInt(1, id);
-            
+
             ps.executeUpdate();
             Konekcija.getInstance().getConnection().commit();
         } catch (SQLException ex) {
             Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }
 
     public void dodajKnjigu(Knjiga novaKnjiga) {
@@ -107,10 +104,10 @@ public class DBBroker {
             ps.setString(4, novaKnjiga.getISBN());
             ps.setInt(5, novaKnjiga.getGodinaIzdanja());
             ps.setString(6, String.valueOf(novaKnjiga.getZanr()));
-            
+
             ps.executeUpdate();
             Konekcija.getInstance().getConnection().commit();
-            
+
         } catch (SQLException ex) {
             Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -125,15 +122,79 @@ public class DBBroker {
             ps.setInt(3, knjigaZaIzmenu.getGodinaIzdanja());
             ps.setString(4, String.valueOf(knjigaZaIzmenu.getZanr()));
             ps.setInt(5, knjigaZaIzmenu.getId());
-            
+
             ps.executeUpdate();
             Konekcija.getInstance().getConnection().commit();
-            
+
         } catch (SQLException ex) {
             Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    
-    
+    public boolean login(String username, String password) {
+        try {
+            String upit = "SELECT * FROM USER WHERE username = ? AND password = ?";
+            PreparedStatement ps = Konekcija.getInstance().getConnection().prepareStatement(upit);
+            ps.setString(1, username);
+            ps.setString(2, password);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    public List<Knjiga> filtriraj(String autor, String naslov) {
+        List<Knjiga> lista = new ArrayList<>();
+        try {
+            String upit = "SELECT * FROM KNJIGA K JOIN AUTOR A ON K.AUTORID=A.ID WHERE 1=1";
+            //k.naslov = ? AND a.ime = ? AND a.prezime = ?
+            if (naslov != null) {
+                upit += " AND k.naslov = '" + naslov + "'";
+            }
+            if (autor != null) {
+
+                String[] podaci = autor.split(" ");
+                if (podaci[0] != null) {
+                    upit += " AND a.ime = '" + podaci[0] + "'";
+                }
+                if (podaci[1] != null) {
+                    upit += " AND a.prezime = '" + podaci[1] + "'";
+                }
+            }
+            Statement st = Konekcija.getInstance().getConnection().createStatement();
+            ResultSet rs = st.executeQuery(upit);
+            while (rs.next()) {
+                int id = rs.getInt("k.id");
+                String naziv = rs.getString("k.naslov");
+                int godIz = rs.getInt("k.godinaIzdanja");
+                String ISBN = rs.getString("k.ISBN");
+                String zanr = rs.getString("k.zanr");
+                System.out.println(zanr);
+                Zanr z = Zanr.valueOf(zanr);
+                int idA = rs.getInt("a.id");
+                String ime = rs.getString("a.ime");
+                String prezime = rs.getString("a.prezime");
+                String biografija = rs.getString("a.biografija");
+                int godR = rs.getInt("a.godinaRodjenja");
+                Autor a = new Autor(idA, ime, prezime, godR, biografija);
+
+                Knjiga k = new Knjiga(id, naziv, a, ISBN, godIz, z);
+
+                lista.add(k);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return lista;
+
+    }
+
 }
